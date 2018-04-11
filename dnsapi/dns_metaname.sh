@@ -94,7 +94,7 @@ dns_metaname_rm() {
   for record in $(echo "$response" | _egrep_o "$expected_name"); do
 
     # Check the text value matches
-    echo "$record" | grep -qE "$expected_data" 2>/dev/null || continue
+    echo "$record" | _egrep_o "$expected_data" > /dev/null 2>&1 || continue
 
     # This gets us the quoted reference number: need to strip the quotes
     ref=$(_getfield "$(echo "$record" | _egrep_o "\"reference\":\"[^\"]*\"")" 2 :)
@@ -145,8 +145,6 @@ _metaname_rpc() {
   export _H1="accept: application/json"
   export _H2="Content-Type: application/json"
 
-  # clear headers from previous request to avoid getting wrong http code on timeouts
-  :>"$HTTP_HEADER"
   _secure_debug2 "data $data"
   response="$(_post "$data" "$METANAME_ENDPOINT" "" "POST")"
 
@@ -166,7 +164,7 @@ _metaname_rpc() {
     return 1
   fi
 
-  response=$(echo "$response" | sed 's/.*"result"\:\[/\[/' | head -c -2)
+  response=$(echo "$response" | sed 's/.*"result"\:\[/\[/')
   return 0
 }
 
